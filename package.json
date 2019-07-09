@@ -27,7 +27,7 @@
     },
     "node-red": {
         "nodes": {
-            "reverse-proxy": "reverse_proxy.js"
+            "reverse-proxy": "http_proxy.js"
         }
     }
 }
