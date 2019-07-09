@@ -1,0 +1,33 @@
+{
+    "name": "node-red-contrib-reverse-proxy",
+    "version": "1.0.0",
+    "description": "A Node-Red node to use Node-RED as a reverse proxy server, for redirecting http(s) requests",
+    "dependencies": {
+        "http-proxy": "1.17.0"
+    },
+    "author": {
+        "name": "Bart Butenaers"
+    },
+    "license": "Apache-2.0",
+    "keywords": [
+        "node-red",
+        "reverse",
+        "proxy",
+        "redirect",
+        "forward",
+        "http"
+    ],
+    "bugs": {
+        "url": "https://github.com/bartbutenaers/node-red-contrib-reverse-proxy/issues"
+    },
+    "homepage": "https://github.com/bartbutenaers/node-red-contrib-reverse-proxy",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/bartbutenaers/node-red-contrib-reverse-proxy.git"
+    },
+    "node-red": {
+        "nodes": {
+            "reverse-proxy": "reverse_proxy.js"
+        }
+    }
+}
