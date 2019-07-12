@@ -7,6 +7,48 @@ Run the following npm command in your Node-RED user directory (typically ~/.node
 npm install bartbutenaers/node-red-contrib-reverse-proxy
 ```
 
+## Introduction
+
+### What is a reverse proxy?
+TODO
+
+### The Node-RED solution
+Node-RED nodes provides some nodes out-of-the-box, which can be used to turn your flow into a reverse proxy:
+
+![image](https://user-images.githubusercontent.com/14224149/61157366-3fc07b80-a4f6-11e9-8bf8-141720d4849b.png)
+
+1. Navigate to an URL (e.g. via a browser), which refers to a Node-RED instance.
+1. A http(s) request will be send to Node-RED.
+1. The **http-in** node listens for all requests for sub-path 'show_request', and it creates both a request and response object.
+1. The output message contains the request object in ```msg.req``` and the corresponding response in ```msg.res```.
+1. The **http-request** node creates a *new* http request, which will be send to the target host.
+1. The target host will answer with a http response.
+1. The http-request node will copy the new http response content into the output message, while the original request and response will be left untouched (in ```msg.req``` and  ```msg.res```).
+1. The **http-out** node will fill the original http response (via ```msg.res```) with data from the input message:
+   + Fill response body with ```msg.payload```.
+   + Fill response status code with ```msg.statusCode```.
+   + Fill response headers with ```msg.headers```.
+   + Fill response cookies with ```msg.cookies```.
+
+   At the end the browser will receive the response ...
+
+### Why an alternative contribution
+The Node-RED standard alternative works very fine, as long as the response is **finite**: indeed only when the http-request node has received a complete response, it will send an output message.  And the http-out node also expects a single (complete) message, which will be used to generate a response once.
+
+But if an **infinite** response is required (e.g. an endless Mjpeg stream), a reverse proxy will do the job.  There are lots of reverse proxies available on the market, but this node offers a simple solution (fully integrated inside Node-RED).
+
+![image](https://user-images.githubusercontent.com/14224149/61160537-07259f80-a500-11e9-9567-2fa0e6d17894.png)
+
+1. Navigate to an URL (e.g. via a browser), which refers to a Node-RED instance.
+1. A http(s) request will be send to Node-RED.
+1. The **http-in** node listens for all requests for sub-path 'show_request', and it creates both a request and response object.
+1. The output message contains the request object in ```msg.req``` and the corresponding response in ```msg.res```.
+1. The **reverse-proxy** will redirect the original http request to the target host.
+1. The target host will answer with a http response.
+1. The reverse proxy node node will fill the original http response (via ```msg.res```) with data received from the target system.
+
+At the end the browser will receive the response ...
+
 ## Node Usage
 The following example flow explains how this node works closely together with Node-RED's httpin node.  Instead of navigating directly to some public url (in this case an mjpeg camera stream from https://webcam1.lpl.org/axis-cgi/mjpg/video.cgi), we will navigate to our Node-RED flow and Node-RED will forward the request to that target:
 
