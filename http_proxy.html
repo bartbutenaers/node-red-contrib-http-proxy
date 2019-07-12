@@ -12,14 +12,66 @@
 -->
 <script type="text/x-red" data-template-name="reverse-proxy">
     <div class="form-row">
-        <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
-        <input type="text" id="node-input-url" placeholder="URL e.g. http://your.server.com" />
-    </div>
-    <br>
-    <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
+    <div class="form-row">
+        <label for="node-input-url"><i class="fa fa-globe"></i> URL</label>
+        <input type="text" id="node-input-url" placeholder="URL e.g. http://your.server.com" />
+    </div>
+    <div class="form-row">
+        <label for="node-input-incomingTimeout"><i class="fa fa-clock-o"></i> Timeout in</label>
+        <input type="text" id="node-input-incomingTimeout" style="width:100px"/>
+        <span for="node-input-incomingTimeout" style="margin-left:5px;"> msecs</span>
+    </div>
+    <div class="form-row">
+        <label for="node-input-outgoingTimeout"><i class="fa fa-clock-o"></i> Timeout out</label>
+        <input type="text" id="node-input-outgoingTimeout" style="width:100px"/>
+        <span for="node-input-incomingTimeout" style="margin-left:5px;"> msecs</span>
+    </div>
+    </br>
+    <div class="form-row">
+        <input type="checkbox" id="node-input-useAuth" style="display: inline-block; width: auto; vertical-align: top;">
+        <label for="node-input-useAuth" style="width: 70%;"> Add authentication credentials</label>
+        <div style="margin-left: 20px" class="node-input-useAuth-row hide">
+            <div class="form-row">
+                <label for="node-input-user"><i class="fa fa-user"></i> Username</label>
+                <input type="text" id="node-input-user">
+            </div>
+            <div class="form-row">
+                <label for="node-input-password"><i class="fa fa-lock"></i> Password</label>
+                <input type="password" id="node-input-password">
+            </div>
+        </div>
+    </div>
+    <div class="form-row">
+        <input type="checkbox" id="node-input-changeOrigin" placeholder="" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-changeOrigin" style="width:70%;"> Change origin of the host header to the target URL</label>
+    </div>
+    <div class="form-row">
+        <input type="checkbox" id="node-input-preserveHeaderKeyCase" placeholder="" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-preserveHeaderKeyCase" style="width:70%;"> Keep letter case of response header key</label>
+    </div>
+    <div class="form-row">
+        <input type="checkbox" id="node-input-hostRewrite" placeholder="" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-hostRewrite" style="width:70%;"> Rewrite the location hostname on redirects</label>
+    </div>
+    <div class="form-row">
+        <input type="checkbox" id="node-input-verifyCertificates" placeholder="" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-verifyCertificates" style="width:70%;">Verify SSL certificates</label>
+    </div>
+    <div class="form-row">
+        <input type="checkbox" id="node-input-followRedirects" placeholder="" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-followRedirects" style="width:70%;">Follow redirects</label>
+    </div>
+    <div class="form-row">
+        <input type="checkbox" id="node-input-toProxy" placeholder="" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-toProxy" style="width:70%;"> Pass the absolute URL as path (proxying to proxy)</label>
+    </div>
+    <div class="form-row">
+        <input type="checkbox" id="node-input-xfwd" placeholder="" style="display:inline-block; width:auto; vertical-align:top;">
+        <label for="node-input-xfwd" style="width:70%;"> Add X-FORWARD headers</label>
+    </div> 
 </script>
 
 <script type="text/javascript">
@@ -29,17 +81,41 @@
         defaults: {
             name: {value: ""},
             url: {value:"", required:false, validate:function(v) { return (v.trim().length === 0) || (v.indexOf("://") === -1) || (v.trim().indexOf("http") === 0)} },
-            events: {value: [], required:true},
-            headers: {value:{}},
-            proxy: {value:"",required:false},
-            restart: {value: false},
-            timeout: {value: 1}
+            incomingTimeout: {value: 0},
+            outgoingTimeout: {value: 0},
+            changeOrigin: {value: false},
+            preserveHeaderKeyCase: {value: false},
+            verifyCertificates: {value: false},
+            followRedirects: {value: false},
+            toProxy: {value: false},
+            xfwd: {value: false}
+        },
+        credentials: {
+            user: {type:"text"},
+            password: {type: "password"}
         },
         inputs: 1,
         outputs: 0,
         icon: "proxy.png",
         label: function() {
             return this.name || "Reverse proxy";
+        },
+        oneditprepare: function() {
+            $("#node-input-useAuth").change(function() {
+                if ($(this).is(":checked")) {
+                    $(".node-input-useAuth-row").show();
+                } else {
+                    $(".node-input-useAuth-row").hide();
+                    $('#node-input-user').val('');
+                    $('#node-input-password').val('');
+                }
+            });
+            if (this.credentials.user || this.credentials.has_password) {
+                $('#node-input-useAuth').prop('checked', true);
+            } else {
+                $('#node-input-useAuth').prop('checked', false);
+            }
+            $("#node-input-useAuth").change();
         }
     });
 </script>
@@ -47,5 +123,27 @@
 <script type="text/x-red" data-help-name="reverse-proxy">
     <p>Node-Red node to use Node-RED as a reverse proxy, for redirecting http(s) requests.</p>
     <p><strong>Url:</strong><br/>
-    The URL of the destination server, to which all http(s) requests need to be redirected.</p>
+    The URL of the target server, to which all http(s) requests need to be redirected.</p>
+    <p><strong>Timeout in:</strong><br/>
+    Timeout (in milliseconds) for the incoming connection.</p>
+    <p><strong>Timeout out:</strong><br/>
+    Timeout (in milliseconds) for the outgoing connection.</p>
+    <p><strong>Timeout out:</strong><br/>
+    Timeout (in milliseconds) for the outgoing connection.</p>
+    <p><strong>Add authentication credentials:</strong><br/>
+    Add an 'Authorization' http header, containing the (base64 encoded) username and password.</p>    
+    <p><strong>Change origin of the host header to the target URL:</strong><br/>
+    TODO.</p>   
+    <p><strong>Keep letter case of response header key:</strong><br/>
+    TODO.</p> 
+    <p><strong>Rewrite the location hostname on redirects:</strong><br/>
+    TODO.</p> 
+    <p><strong>Verify SSL certificates:</strong><br/>
+    Enable verification of the target's certificate chain.  Caution: self-signed certificates will be rejected!</p> 
+    <p><strong>Follow redirects:</strong><br/>
+    TODO.</p> 
+    <p><strong>Pass the absolute URL as path (proxying to proxy):</strong><br/>
+    TODO.</p> 
+    <p><strong>Add X-FORWARD headers:</strong><br/>
+    TODO.</p> 
 </script>
