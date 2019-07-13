@@ -10,12 +10,36 @@ npm install bartbutenaers/node-red-contrib-reverse-proxy
 ## Introduction
 
 ### What is a reverse proxy?
-TODO
+A reverse proxy is a server that is put between a client and one or more other servers.  The reverse proxy intercepts all http(s) requests from that client, and decides to which server the request needs to be forwarded.  As soon as the server has responded, the reverse proxy will return the response to the client.  For the client it appears as if the reverse proxy itself is the origin of the response, i.e. the client is not aware that his request has been forwarded to other servers ...
 
-### The Node-RED solution
-Node-RED nodes provides some nodes out-of-the-box, which can be used to turn your flow into a reverse proxy:
+![Introduction](https://user-images.githubusercontent.com/14224149/61167801-10386000-a544-11e9-90d4-0679f230b5ca.png)
 
-![image](https://user-images.githubusercontent.com/14224149/61157366-3fc07b80-a4f6-11e9-8bf8-141720d4849b.png)
+### Why using a reverse proxy?
+There are a number of advantages for adding a reverse proxy in between:
++ Hide your intern network from external clients.  The client communicates only with your reverse proxy, and he is not aware which and how many servers you are running.
++ Add some extra security to check which client is allowed to access which target server.
++ Improve performance and reliability by doing load balancing.  Indeed the reverse proxy can choose to which target server a request will be send.
++ ...
+
+I decided to develop this node, since I had some issues to display IP camera images in my Node-RED dashboard:
++ When you want an ```img``` tag to display images from an IP camera, but the camera uses basic authentication.  But you don't want to store the credentials (username/password) in your dashboard template node, because then your credentials would be send to your browser as plain text (which is very unsecure).  So avoid stuff like this:
+   ```
+   <img src="https://<username>:<password>@<ip cam hostname>/<some path>">
+   ```
+   You could solve this, by implementing it like this:
+   1. Create a dashboard template node, containing an image that will get its data from Node-RED (instead of directly from your IP camera):
+      ```
+      <img src="https://<node-red hostname>:1880/<some path>">
+      ```
+   1. Via a http-in node, this request will be send to the reverse-proxy node (see example flow below).
+   1. The reverse-proxy node will add your credentials (which are stored securely in Node-RED) and forward your request to your IP camera.
+   1. The 'img' element will get the camera image and display it.
++ When trying to get image data from my IP camera's in the Node-RED dashboard, security exceptions will prevent this.  Indeed modern browsers support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (Cross-Origin Resource Sharing).  That mechanism prevents you to access resources from a server at a different origin.  In other words you can only send http(s) requests to your Node-RED hostname (where your dashboard application is hosted), but not from other target servers.  Unless such a target server adds a Access-Control-Allow-Origin header variable to its response, which tells your browser that it is allowed to give you access to that response.  There is no way to circumvent this (copyright protection) system, so my dashboard needs to access the IP cameras via the Node-RED hostname.  This can easily be implement by using this reverse-proxy node.
+
+### The standard Node-RED solution
+Node-RED provides some nodes out-of-the-box, which can be used to turn your flow into a reverse proxy:
+
+![Standard nodes](https://user-images.githubusercontent.com/14224149/61157366-3fc07b80-a4f6-11e9-8bf8-141720d4849b.png)
 
 1. Navigate to an URL (e.g. via a browser), which refers to a Node-RED instance.
 1. A http(s) request will be send to Node-RED.
@@ -37,7 +61,7 @@ The Node-RED standard alternative works very fine, as long as the response is **
 
 But if an **infinite** response is required (e.g. an endless Mjpeg stream), a reverse proxy will do the job.  There are lots of reverse proxies available on the market, but this node offers a simple solution (fully integrated inside Node-RED).
 
-![image](https://user-images.githubusercontent.com/14224149/61160537-07259f80-a500-11e9-9567-2fa0e6d17894.png)
+![Proxy in Node-RED](https://user-images.githubusercontent.com/14224149/61160537-07259f80-a500-11e9-9567-2fa0e6d17894.png)
 
 1. Navigate to an URL (e.g. via a browser), which refers to a Node-RED instance.
 1. A http(s) request will be send to Node-RED.
@@ -52,7 +76,7 @@ At the end the browser will receive the response ...
 ## Node Usage
 The following example flow explains how this node works closely together with Node-RED's httpin node.  Instead of navigating directly to some public url (in this case an mjpeg camera stream from https://webcam1.lpl.org/axis-cgi/mjpg/video.cgi), we will navigate to our Node-RED flow and Node-RED will forward the request to that target:
 
-   ![image](https://user-images.githubusercontent.com/14224149/60925124-19ef6880-a2a3-11e9-8fdd-fede83adc291.png)
+   ![Stream example](https://user-images.githubusercontent.com/14224149/60925124-19ef6880-a2a3-11e9-8fdd-fede83adc291.png)
    
    ```
    [{"id":"cf75b05d.199df","type":"http in","z":"8bb35f74.82618","name":"","url":"/mjpeg_test","method":"get","upload":false,"swaggerDoc":"","x":600,"y":480,"wires":[["fc540b94.6dd968"]]},{"id":"fc540b94.6dd968","type":"reverse-proxy","z":"8bb35f74.82618","name":"","url":"https://webcam1.lpl.org/axis-cgi/mjpg/video.cgi","events":[],"headers":{},"proxy":"","restart":false,"timeout":1,"x":820,"y":480,"wires":[]}]
@@ -70,7 +94,7 @@ This way, it looks like Node-RED is providing your mjpeg camera stream...
 
 It is easy to simulate the effect of every individual setting in the config screen, by using following test flow:
 
-![image](https://user-images.githubusercontent.com/14224149/61107320-f33a5900-a47f-11e9-8e33-c42e8b0c6040.png)
+![test flow](https://user-images.githubusercontent.com/14224149/61107320-f33a5900-a47f-11e9-8e33-c42e8b0c6040.png)
 
 ```
 [{"id":"cf75b05d.199df","type":"http in","z":"8bb35f74.82618","name":"","url":"/show_request","method":"get","upload":false,"swaggerDoc":"","x":430,"y":480,"wires":[["8f1c4103.5481e"]]},{"id":"8f1c4103.5481e","type":"reverse-proxy","z":"8bb35f74.82618","name":"","url":"https://httpbin.org/get","incomingTimeout":0,"outgoingTimeout":0,"changeOrigin":false,"preserveHeaderKeyCase":false,"verifyCertificates":false,"followRedirects":false,"toProxy":false,"xfwd":false,"x":660,"y":480,"wires":[]}]
@@ -112,7 +136,7 @@ The timeout (in milliseconds) for the outgoing connection.
 ### Add authentication credentials
 When this option is selected, the basic authentication credentials can be entered:
 
-![image](https://user-images.githubusercontent.com/14224149/61108073-b2dbda80-a481-11e9-8613-733fdf90617d.png)
+![credentials](https://user-images.githubusercontent.com/14224149/61108073-b2dbda80-a481-11e9-8613-733fdf90617d.png)
 
 As a result, an 'Authorization' http header will be added to the target request.  This header field will contain the literal "Basic " followed by the (base64 encoded) username and password:
 ```json
@@ -152,3 +176,4 @@ TODO
 + This is an experimental node, so I have to add all kind of options (see list [here](https://github.com/http-party/node-http-proxy#options)).
 + When the resource cannot be found, a 404 error will occur as expected.  However the URL of the target host appears in the browser, but we would like the URL of the Node-RED host to appear ... 
 + Implement timeout handling
++ Test performance on an RPI3
