@@ -170,8 +170,18 @@ TODO
 TODO
 
 ### Add X-FORWARD headers
-TODO
-
+Some target hosts might require an XFH header to be send in the request, to determine which host originally has send the request.  
+```json
+{
+  "args": {}, 
+  "headers": {
+    ...
+    "X-Forwarded-Host": "localhost:1880",
+    ...
+  }, 
+}
+```
+Indeed when a request is forwarded by one or more proxy servers, the target host can only see (via the 'origin') the *last* server hostname/ipaddress.  The XFH header contains a (comma separated list) of *all* hostnames/ipaddresses, which allows the target host to determine the route that the request has traversed.  Remark: always be aware that the content of this field might be incomplete or incorrect ...
 ## TODO's
 + This is an experimental node, so I have to add all kind of options (see list [here](https://github.com/http-party/node-http-proxy#options)).
 + When the resource cannot be found, a 404 error will occur as expected.  However the URL of the target host appears in the browser, but we would like the URL of the Node-RED host to appear ... 
