@@ -114,12 +114,12 @@ It is easy to simulate the effect of every individual setting in the config scre
        "Cache-Control": "max-age=0", 
        "Cookie": "io=wgWEKuHzooHPp2eDAAAA", 
        "Dnt": "1", 
-       "Host": "localhost", 
+       "Host": "<ip address from your original http request>", 
        "Upgrade-Insecure-Requests": "1", 
        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.80 Safari/537.36 Avast/75.0.1447.80"
      }, 
      "origin": "84.195.139.40, 84.195.139.40", 
-     "url": "https://localhost/get"
+     "url": "https://<ip address from your original http request>/get"
    }
    ```  
    Since the httpbin is an external endpoint, my WAN IP address will be inside the "origin" field ...
@@ -150,7 +150,34 @@ As a result, an 'Authorization' http header will be added to the target request.
 ```
 
 ### Change origin of the host header to the target URL
-TODO
+This option is deselected by default, which means both 'host' and 'url' contain the hostname/ipaddress of the original http request (i.e. the IP address of your Node-RED host):
+```json
+{
+  "args": {}, 
+  "headers": {
+    ... 
+    "Host": "<ip address from your original http request>", 
+    ...
+  }, 
+  ...
+  "url": "https://<ip address from your original http request>/get"
+}
+```
+
+When this option is selected, both 'host' and 'url' will contain the hostname/ipaddress of the target host:
+```json
+{
+  "args": {}, 
+  "headers": {
+    ...
+    "Host": "httpbin.org", 
+    ...
+  }, 
+  ...
+  "url": "https://httpbin.org/get"
+}
+```
+Remark: The 'host' header variable tells the webserver which virtual host to use.  Activate this option for [name-based virtual hosted sites](https://en.wikipedia.org/wiki/Virtual_hosting#Name-based), which use multiple host names for the same IP address.  When one of those hostnames is included in the http request, the target server (which hosts multiple sites) will be able to respond the corresponding content.
 
 ### Keep letter case of response header key
 TODO
@@ -176,7 +203,7 @@ Some target hosts might require an XFH header to be send in the request, to dete
   "args": {}, 
   "headers": {
     ...
-    "X-Forwarded-Host": "localhost:1880",
+    "X-Forwarded-Host": "<ip address from original request>:1880",
     ...
   }, 
 }
