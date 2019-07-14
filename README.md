@@ -9,6 +9,8 @@ npm install bartbutenaers/node-red-contrib-reverse-proxy
 
 ## Introduction
 
+This is not a full blown reverse proxy, but a lightweight one which I developed for personal use.  The [node-http-proxy](https://github.com/http-party/node-http-proxy#options) library is used under the cover, which contains some extra funtionality.  Pull requests are always welcome!
+
 ### What is a reverse proxy?
 A reverse proxy is a server that is put between a client and one or more other servers.  The reverse proxy intercepts all http(s) requests from that client, and decides to which server the request needs to be forwarded.  As soon as the server has responded, the reverse proxy will return the response to the client.  For the client it appears as if the reverse proxy itself is the origin of the response, i.e. the client is not aware that his request has been forwarded to other servers ...
 
@@ -150,6 +152,10 @@ As a result, an 'Authorization' http header will be added to the target request.
 ```
 
 ### Change origin of the host header to the target URL
+The target server should use the same hostname as the reverse-proxy (when available to the public web), otherwise the hostname/ipaddress of the target server might become visible to the enduser.  For example when somebody requests a non-existing page, the target server will return a error page containing the real ip address of the resource:
+
+![image](https://user-images.githubusercontent.com/14224149/61180457-e00dc180-a616-11e9-82ad-b7d5ed3f4963.png)
+
 This option is deselected by default, which means both 'host' and 'url' contain the hostname/ipaddress of the original http request (i.e. the IP address of your Node-RED host):
 ```json
 {
@@ -194,7 +200,15 @@ Caution: Normally this option won't be selected, because self-signed certificate
 TODO
 
 ### Pass the absolute URL as path (proxying to proxy)
-TODO
+Normally the http request 'path' contains the relative path from the URL.  So it does not include any query/URL parameters, in contradiction to the http request 'uri' field ( which contains the full absolute URL).
+   
+E.g. when *"url"* is *"http://domain.com/foo/bar"*, then the proxy will fill the http request *"path"* with *"foo/bar"*
+
+When this option is selected, the absolute URL (part of the 'url' field) will be used as the path.  
+
+E.g. when *"url"* is *"http://domain.com/foo/bar"*, then the proxy will fill the http request *"path"* with *"/http://domain.com/foo/bar"*
+
+This is useful for proxying to proxies.
 
 ### Add X-FORWARD headers
 Some target hosts might require an XFH header to be send in the request, to determine which host originally has send the request.  
@@ -208,9 +222,14 @@ Some target hosts might require an XFH header to be send in the request, to dete
   }, 
 }
 ```
-Indeed when a request is forwarded by one or more proxy servers, the target host can only see (via the 'origin') the *last* server hostname/ipaddress.  The XFH header contains a (comma separated list) of *all* hostnames/ipaddresses, which allows the target host to determine the route that the request has traversed.  Remark: always be aware that the content of this field might be incomplete or incorrect ...
+Indeed when a request is forwarded by one or more proxy servers, the target host can only see (via the 'origin') the *last* server hostname/ipaddress.  The XFH header contains a (comma separated list) of *all* hostnames/ipaddresses, which allows the target host to determine the route that the request has traversed:
+   *"<client ip address>, <proxy 1 ip address>, <proxy 2 ip address> ..."*
+
+Remark: always be aware that the content of this field might be incomplete or incorrect ...
+
 ## TODO's
 + This is an experimental node, so I have to add all kind of options (see list [here](https://github.com/http-party/node-http-proxy#options)).
 + When the resource cannot be found, a 404 error will occur as expected.  However the URL of the target host appears in the browser, but we would like the URL of the Node-RED host to appear ... 
 + Implement timeout handling
 + Test performance on an RPI3
++ Test and explain "Pass the absolute URL as path (proxying to proxy)"
