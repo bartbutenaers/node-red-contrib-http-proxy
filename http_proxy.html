@@ -52,10 +52,10 @@
         <input type="checkbox" id="node-input-preserveHeaderKeyCase" placeholder="" style="display:inline-block; width:auto; vertical-align:top;">
         <label for="node-input-preserveHeaderKeyCase" style="width:70%;"> Keep letter case of response header key</label>
     </div>
-    <div class="form-row">
-        <input type="checkbox" id="node-input-hostRewrite" placeholder="" style="display:inline-block; width:auto; vertical-align:top;">
-        <label for="node-input-hostRewrite" style="width:70%;"> Rewrite the location hostname on redirects</label>
-    </div>
+    <!--<div class="form-row">-->
+    <!--    <input type="checkbox" id="node-input-hostRewrite" placeholder="" style="display:inline-block; width:auto; vertical-align:top;">-->
+    <!--    <label for="node-input-hostRewrite" style="width:70%;"> Rewrite the location hostname on redirects</label>-->
+    <!--</div>-->
     <div class="form-row">
         <input type="checkbox" id="node-input-verifyCertificates" placeholder="" style="display:inline-block; width:auto; vertical-align:top;">
         <label for="node-input-verifyCertificates" style="width:70%;">Verify SSL certificates</label>
@@ -122,6 +122,7 @@
 
 <script type="text/x-red" data-help-name="reverse-proxy">
     <p>Node-Red node to use Node-RED as a reverse proxy, for redirecting http(s) requests.</p>
+    <p>See my <a target="_blank" href="https://github.com/bartbutenaers/node-red-contrib-reverse-proxy/blob/master/README.md">readme</a> page on Github for more information.</p>
     <p><strong>Url:</strong><br/>
     The URL of the target server, to which all http(s) requests need to be redirected.</p>
     <p><strong>Timeout in:</strong><br/>
@@ -133,17 +134,15 @@
     <p><strong>Add authentication credentials:</strong><br/>
     Add an 'Authorization' http header, containing the (base64 encoded) username and password.</p>    
     <p><strong>Change origin of the host header to the target URL:</strong><br/>
-    TODO.</p>   
+    Make sure that the target server uses the same hostname as the reverse-proxy .</p>   
     <p><strong>Keep letter case of response header key:</strong><br/>
-    TODO.</p> 
-    <p><strong>Rewrite the location hostname on redirects:</strong><br/>
-    TODO.</p> 
+    If not selected, the headers keys will be converted to lowercase.</p> 
     <p><strong>Verify SSL certificates:</strong><br/>
     Enable verification of the target's certificate chain.  Caution: self-signed certificates will be rejected!</p> 
     <p><strong>Follow redirects:</strong><br/>
-    TODO.</p> 
+    Allow the requested to be redirected, in case the response status is 3xx (and location header is supplied).</p> 
     <p><strong>Pass the absolute URL as path (proxying to proxy):</strong><br/>
-    TODO.</p> 
+    The request.path will become equal to the hostname in the request.url.</p> 
     <p><strong>Add X-FORWARD headers:</strong><br/>
-    TODO.</p> 
+    A X-Forwarded-Host header variable will be added, to make the original caller available.</p> 
 </script>
