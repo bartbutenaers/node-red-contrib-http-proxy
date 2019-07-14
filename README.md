@@ -224,6 +224,15 @@ Indeed when a request is forwarded by one or more proxy servers, the target host
 
 Remark: always be aware that the content of this field might be incomplete or incorrect ...
 
-## TODO's
-+ Implement timeout handling
-+ Test performance on an RPI3
+## Performance
+All the data chunks in the http response (arriving from the target server), need to be passed via the proxy to original response (handled by the http-in node).  This means a lot of data needs to be handled, for example all images in an Mjpeg steam.  
+
+Let's use the Mjpeg stream (see example flow in the "Node Usage" paragraph), to get a basic idea of the performance.  The stream contains about 11 images per second at a resolution of 640x480.  As soon as the proxy starts handling the stream, there is almost no extra CPU being used on my Raspberry PI 3:
+
+![image](https://user-images.githubusercontent.com/14224149/61189488-6f09f080-a68e-11e9-86ec-394b6ba19886.png)
+
+Rermarks:
++ The Y-axis contains a percentage of the overal CPU usage (i.e. a sum of the 4 cores).
++ Of course there is ***NO processing*** of the data chunks involved, since the Mjpeg stream is decoded (into separate images) in the dashboard (i.e. in the browser and not on my Raspberry).
+
+When I open the 
