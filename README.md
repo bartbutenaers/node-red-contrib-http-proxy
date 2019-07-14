@@ -130,10 +130,10 @@ It is easy to simulate the effect of every individual setting in the config scre
 This URL refers to the target host system, to which the http(s) requests need to be forwarded.
 
 ### Timeout in
-The timeout (in milliseconds) for the incoming connection.
+The timeout (in milliseconds) for the incoming connection.  A timeout of ```0``` means no timeout, i.e. the proxy will keep waiting.
 
 ### Timeout out
-The timeout (in milliseconds) for the outgoing connection.
+The timeout (in milliseconds) for the outgoing connection.  A timeout of ```0``` means no timeout, i.e. the proxy will keep waiting.
 
 ### Add authentication credentials
 When this option is selected, the basic authentication credentials can be entered:
