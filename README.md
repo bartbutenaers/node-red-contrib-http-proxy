@@ -186,10 +186,7 @@ When this option is selected, both 'host' and 'url' will contain the hostname/ip
 Remark: The 'host' header variable tells the webserver which virtual host to use.  Activate this option for [name-based virtual hosted sites](https://en.wikipedia.org/wiki/Virtual_hosting#Name-based), which use multiple host names for the same IP address.  When one of those hostnames is included in the http request, the target server (which hosts multiple sites) will be able to respond the corresponding content.
 
 ### Keep letter case of response header key
-TODO
-
-### Rewrite the location hostname on redirects
-TODO
+If not selected, the keys of the http header variables will be converted to lowercase.
 
 ### Verify SSL certificates
 Enable validation of the SSL certificate chain that will be received from the target host. 
@@ -197,7 +194,7 @@ Enable validation of the SSL certificate chain that will be received from the ta
 Caution: Normally this option won't be selected, because self-signed certificates will be rejected by this test!  In that case you would receive an ```UNABLE_TO_VERIFY_LEAF_SIGNATURE``` error ...
 
 ### Follow redirects
-TODO
+When selected, the request will be redirected in case the response has status 3xx.  A 'location' header is required, otherwise no redirection is possible...
 
 ### Pass the absolute URL as path (proxying to proxy)
 Normally the http request 'path' contains the relative path from the URL.  So it does not include any query/URL parameters, in contradiction to the http request 'uri' field ( which contains the full absolute URL).
@@ -228,8 +225,5 @@ Indeed when a request is forwarded by one or more proxy servers, the target host
 Remark: always be aware that the content of this field might be incomplete or incorrect ...
 
 ## TODO's
-+ This is an experimental node, so I have to add all kind of options (see list [here](https://github.com/http-party/node-http-proxy#options)).
-+ When the resource cannot be found, a 404 error will occur as expected.  However the URL of the target host appears in the browser, but we would like the URL of the Node-RED host to appear ... 
 + Implement timeout handling
 + Test performance on an RPI3
-+ Test and explain "Pass the absolute URL as path (proxying to proxy)"
