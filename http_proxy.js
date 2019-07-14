@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 Bart Butenaers
+ * Copyright 2019 Bart Butenaers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,6 @@ module.exports = function(RED) {
             ignorePath: true,
             changeOrigin: config.changeOrigin,
             preserveHeaderKeyCase: config.preserveHeaderKeyCase,
-            verifyCertificates: config.verifyCertificates,
             followRedirects: config.followRedirects,
             toProxy: config.toProxy,
             // Keep the protocol (http or https) as specified in the target url
