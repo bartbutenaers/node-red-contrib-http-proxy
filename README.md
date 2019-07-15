@@ -231,8 +231,6 @@ Let's use the Mjpeg stream (see example flow in the "Node Usage" paragraph), to 
 
 ![image](https://user-images.githubusercontent.com/14224149/61189488-6f09f080-a68e-11e9-86ec-394b6ba19886.png)
 
-Rermarks:
+Remarks:
 + The Y-axis contains a percentage of the overal CPU usage (i.e. a sum of the 4 cores).
 + Of course there is ***NO processing*** of the data chunks involved, since the Mjpeg stream is decoded (into separate images) in the dashboard (i.e. in the browser and not on my Raspberry).
-
-When I open the 
