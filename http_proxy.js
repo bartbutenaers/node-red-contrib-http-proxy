@@ -16,6 +16,17 @@
 module.exports = function(RED) {
     var httpProxy = require('http-proxy');
     
+    function handleError(node, err, req, res) {
+        // Make sure the error can be handled using a Catch-node
+        node.error(err);
+        
+        // Return an internal server error to the requesting client
+        res.writeHead(500, {
+            'Content-Type': 'text/plain'
+        });
+        res.end(err);        
+    }
+    
     function ReverseProxyNode(config) {
         RED.nodes.createNode(this, config);
 
@@ -23,8 +34,8 @@ module.exports = function(RED) {
         
         node.proxyServer = httpProxy.createProxyServer({});
         
-        node.proxyServer.on('error', function(err) {
-            node.error(err);
+        node.proxyServer.on('error', function(err, req, res) {
+            handleError(node, err, req, res);
         });
         
         debugger;
@@ -62,12 +73,35 @@ module.exports = function(RED) {
         }
         
         node.on("input", function(msg) {
+            var optionsClone = {
+                // An url can be provided via msg.url only when no url has been specified in the config screen
+                target: options.target || msg.url,
+                secure: options.secure,
+                followRedirects: options.followRedirects,
+                ignorePath: options.ignorePath,
+                changeOrigin: options.changeOrigin,
+                preserveHeaderKeyCase: options.preserveHeaderKeyCase,
+                followRedirects: options.followRedirects,
+                toProxy: options.toProxy,
+                protocolRewrite: options.protocolRewrite,
+                xfwd: options.xfwd
+            }
+
+            var target = optionsClone.target;
+            
+            if (!target || (typeof target !== 'string' && !target instanceof String) || target === "") {
+                var error = "When no url provided in config screen, an url should be provided via msg.url";
+                handleError(node, error, msg.req, msg.res._res); 
+                return;
+            }            
+            
             // Redirect the http(s) request to the specified URL, and write the response (from that host)
-            node.proxyServer.web(msg.req, msg.res._res, options);
+            node.proxyServer.web(msg.req, msg.res._res, optionsClone);
         });
 
         node.on("close", function() {
-            // TODO proxy server sluiten ???
+            // Shutdown the proxy server, to make sure it doesn't accept new connections anymore
+            node.proxyServer.close();
         });
     }
 
