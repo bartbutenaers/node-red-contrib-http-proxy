@@ -129,6 +129,14 @@ It is easy to simulate the effect of every individual setting in the config scre
 ### URL
 This URL refers to the target host system, to which the http(s) requests need to be forwarded.
 
+When the URL is not specified in the config screen, it needs to be specified in the input message as ```msg.url```:
+
+![msg.url](https://user-images.githubusercontent.com/14224149/61331030-51b95b80-a821-11e9-9aa9-81532a03a4d5.png)
+
+```
+[{"id":"28c11aa6.a36ac6","type":"http in","z":"8bb35f74.82618","name":"","url":"/url_test","method":"get","upload":false,"swaggerDoc":"","x":470,"y":1020,"wires":[["f1d3e8e3.21c4e8"]]},{"id":"f1d3e8e3.21c4e8","type":"change","z":"8bb35f74.82618","name":"","rules":[{"t":"set","p":"url","pt":"msg","to":"https://webcam1.lpl.org/axis-cgi/mjpg/video.cgi","tot":"str"}],"action":"","property":"","from":"","to":"","reg":false,"x":670,"y":1020,"wires":[["471f0190.38cac"]]},{"id":"471f0190.38cac","type":"reverse-proxy","z":"8bb35f74.82618","name":"Reverse proxy without URL","url":"","incomingTimeout":0,"outgoingTimeout":0,"changeOrigin":false,"preserveHeaderKeyCase":false,"verifyCertificates":false,"followRedirects":false,"toProxy":false,"xfwd":false,"x":920,"y":1020,"wires":[]}]
+```
+
 ### Timeout in
 The timeout (in milliseconds) for the incoming connection.  A timeout of ```0``` means no timeout, i.e. the proxy will keep waiting.
 
@@ -223,6 +231,26 @@ Indeed when a request is forwarded by one or more proxy servers, the target host
    *"<client ip address>, <proxy 1 ip address>, <proxy 2 ip address> ..."*
 
 Remark: always be aware that the content of this field might be incomplete or incorrect ...
+
+## Error handling
+In this example flow, the reverse-proxy node doesn't have an URL:
+
+![error flow](https://user-images.githubusercontent.com/14224149/61329536-d4401c00-a81d-11e9-88fe-fcf8c4f2a4e3.png)
+
+```
+[{"id":"10e09af3.174bf5","type":"http in","z":"8bb35f74.82618","name":"","url":"/no_url_test","method":"get","upload":false,"swaggerDoc":"","x":560,"y":1160,"wires":[["2c4712b9.794fee"]]},{"id":"95353a94.3e3ac8","type":"catch","z":"8bb35f74.82618","name":"Catch reverse proxy errors","scope":["471f0190.38cac"],"x":530,"y":1220,"wires":[["1bab7886.288597"]]},{"id":"1bab7886.288597","type":"debug","z":"8bb35f74.82618","name":"Reverse proxy errors","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"true","x":800,"y":1220,"wires":[]},{"id":"2c4712b9.794fee","type":"reverse-proxy","z":"8bb35f74.82618","name":"Reverse proxy without URL","url":"","incomingTimeout":0,"outgoingTimeout":0,"changeOrigin":false,"preserveHeaderKeyCase":false,"verifyCertificates":false,"followRedirects":false,"toProxy":false,"xfwd":false,"x":820,"y":1160,"wires":[]}]
+```
+
+An unexpected error will occur, resulting in following actions:
+1. A Node-RED error will be raised, which can be intercepted using the Catch-node:
+
+   ![catch error](https://user-images.githubusercontent.com/14224149/61330116-32b9ca00-a81f-11e9-9099-4706d882a162.png)
+   
+1. An internal server error (status 500) will be returned to the client:
+
+   ![server error](https://user-images.githubusercontent.com/14224149/61330289-917f4380-a81f-11e9-9ed3-7a3d05860933.png)
+
+1. The connection will be closed, to avoid that the client keeps waiting for an answer.
 
 ## Performance
 All the data chunks in the http response (arriving from the target server), need to be passed via the proxy to original response (handled by the http-in node).  This means a lot of data needs to be handled, for example all images in an Mjpeg steam.  
