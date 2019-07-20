@@ -27,7 +27,7 @@ module.exports = function(RED) {
         res.end(err);        
     }
     
-    function ReverseProxyNode(config) {
+    function HttpProxyNode(config) {
         RED.nodes.createNode(this, config);
 
         var node = this;
@@ -105,7 +105,7 @@ module.exports = function(RED) {
         });
     }
 
-    RED.nodes.registerType("reverse-proxy", ReverseProxyNode,{
+    RED.nodes.registerType("http-proxy", HttpProxyNode,{
         credentials: {
             user: {type:"text"},
             password: {type: "password"}
