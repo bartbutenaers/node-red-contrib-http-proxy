@@ -82,6 +82,22 @@ However it works only for ***finite*** http responses, i.e. responses with data 
 
 I first tried to add (infinite) streaming functionality to the http-request and http-out nodes.  But meanwhile it became clear that creating a dedicated *http-proxy* node was a much better solution ...
 
+### The decoding & encoding solution
+Specific for ***infinite multipart http streams*** (like mjpeg) stream, you could solve it using my [node-red-contrib-multipart-stream-decoder](https://github.com/bartbutenaers/node-red-contrib-multipart-stream-decoder) and [node-red-contrib-multipart-stream-encoder](https://github.com/bartbutenaers/node-red-contrib-multipart-stream-encoder) nodes:
+
+![encode_decode](https://user-images.githubusercontent.com/14224149/61614453-10cba780-ac64-11e9-94c5-2cd9e81b9fa9.png)
+
+1. The client (e.g. dashboard) sends a request to the Node-RED flow, instead of directly to the IP camera.
+2. The *http-in* node captures the request, and sends a message to the multipart-decoder node.
+3. The *multipart-decoder* sends a *new* request to the IP camera.
+4. The IP camera will return an infinite stream of data chunks.  
+5. The multipart-decoder node will collect the data chunks that arrive, and detect images in those chunks.  Each output message will contain a single image!
+6. The *multipart-encoder* node will setup an mjpeg stream, and it will write the arriving images into that stream.  So the dashboard will decode the mjpeg stream again, and show the images ...
+
+This works again fine and is secure, since the multipart-decoder node can use credentials that are safely stored inside Node-RED.  And it is very usefull when you want to do some ***image processing***!  Indeed the images can be processed (e.g. face detection) before sending them to the client.
+
+However decoding and encoding will use a lot of system resources (both memory and cpu), which is rather useless if you don't want to do any image processing.  If you just want to forward the original data chunks to the client, then you will need the http-proxy solution ...
+
 ### The http-proxy solution
 Since the standard Node-RED setup isn't able to deal with ***infinite*** http responses (see previous paragraph), I decided to develop this node.  It can be used as a safe way to get infinite response (e.g. mjpeg stream from an IP camera):
    
