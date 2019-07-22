@@ -56,7 +56,7 @@ As a result, this kind of setup needs to be ***AVOIDED!!!***
 ### The standard Node-RED solution
 Node-RED provides some nodes out-of-the-box, which can be used to turn your flow into a http proxy:
 
-![nodered_proxy](https://user-images.githubusercontent.com/14224149/61610191-b0833880-ac58-11e9-92fd-48ed5878c801.png)
+![standard solution](https://user-images.githubusercontent.com/14224149/61613931-d281b880-ac62-11e9-9aef-a95fd6cd4126.png)
 
 1. The client (e.g. dashboard) sends a http request to the *http-in* node, e.g. by pointing the ```<img>``` or ```<video>``` tag element's source (```src```) to your Node-RED flow (instead of directly to e.g. your IP camera):
    
@@ -64,7 +64,13 @@ Node-RED provides some nodes out-of-the-box, which can be used to turn your flow
    <img src="https://<node-red hostname>:1880/<some path>">
    ```
 
-2. The *http-request* node sends a ***new*** http request to the real target (e.g. your IP camera), to get the data (e.g. image).
+2. A message is send to the http-request node.
+
+3. The *http-request* node sends a ***new*** http request to the real target (e.g. your IP camera), to get the data (e.g. image).
+
+4. The target returns the requested data.
+
+5. A message - containing the data - will be send to the http-out node.
 
 3. The *http-out* node returns the data (e.g. image) to the client.
 
