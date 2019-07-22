@@ -4,12 +4,14 @@ A Node-Red node to use Node-RED as a http proxy server, for redirecting http(s) 
 ## Install
 Run the following npm command in your Node-RED user directory (typically ~/.node-red):
 ```
-npm install bartbutenaers/node-red-contrib-http-proxy
+npm install node-red-contrib-http-proxy
 ```
 
 ## Introduction
 
-This is not a full blown http proxy, but a lightweight one which I developed for personal use.  The [node-http-proxy](https://github.com/http-party/node-http-proxy#options) library is used under the cover, which contains some extra funtionality.  Pull requests are always welcome, to implement these extra features into this node!  Or you can use one of a third party http proxy (e.g. Nginx) ...
+This is not a full blown http proxy, but a lightweight one which I developed for personal use.  The [node-http-proxy](https://github.com/http-party/node-http-proxy#options) library is used under the cover, which contains some extra funtionality.  Pull requests are always welcome, to implement these extra features into this node!  When you need an advanced http proxy, you can also use a third party free http proxy (e.g. Nginx) ...
+
+This node can be used for all kind of http(s) request, independent whether the http response is finite or infinite (as explained below).  But since I developed it to get an mjpeg stream from my IP camera, most examples will be about IP cameras ...
 
 ### What is a http proxy?
 A http proxy is a server that is put between a client and one or more other servers.  The http proxy intercepts all http(s) requests from that client, and decides to which server the request needs to be forwarded.  As soon as the server has responded, the http proxy will return the response to the client.  For the client it appears as if the http proxy itself is the origin of the response, i.e. the client is not aware that his request has been forwarded to other servers ...
@@ -20,15 +22,15 @@ A http proxy is a server that is put between a client and one or more other serv
 There are a number of advantages for adding a http proxy in between:
 + Hide your intern network from external clients.  The client communicates only with your http proxy, and he is not aware which and how many servers you are running.
 
-   CAUTION: It seems that this node is not 100% a ***http proxy***, since some information about the target server *leaks* to the client.  More information is available in this [discussion](https://discourse.nodered.org/t/use-node-red-as-reverse-proxy/13017/22?u=bartbutenaers) on the Node-RED forum.
+   CAUTION: It seems that this node is not 100% a ***reverse proxy***, since some information about the target server *might leak* to the client.  More information is available in this [discussion](https://discourse.nodered.org/t/use-node-red-as-reverse-proxy/13017/22?u=bartbutenaers) on the Node-RED forum.  Please check (e.g. via Chrome developer tools) whether the http response doesn't contain sensitive information, before using this node in a critical environment!
    
-+ Add some extra security to check which client is allowed to access which target server.
++ Add some extra security, to check which client is allowed to access which target server.
 
 + Improve performance and reliability by implementing load balancing.  Indeed the http proxy can choose to which target server a request will be send.
 + ...
 
 ### The solution without proxy
-It is indeed very simple to show camera images/streams in the dashboard, by getting the data *directly* from the the target (e.g. an IP camera):
+It is very easy to show camera images/streams in the dashboard, by getting the data *directly* from the the target (e.g. an IP camera):
 
    ![hacker](https://user-images.githubusercontent.com/14224149/61587842-ead5d280-ab91-11e9-8351-225c7326c828.png)
 
@@ -36,7 +38,7 @@ It is very easy to create such a dashboard.  For example using a dashboard templ
 ```
 <img src="https://<ip cam hostname>/<some path>">
  ```
-Although this is very simple, it has a number of disadvantages:
+Although such a dashboard can be created very easily, it has a number of disadvantages:
 + Hopefully you have activated *basic authentication* on your IP camera, i.e. secured it with username and password.  In that case you might consider to hardcode the credentials (username/password) in your dashboard template node:
 
    ```
@@ -68,14 +70,14 @@ Node-RED provides some nodes out-of-the-box, which can be used to turn your flow
 
 This setup works fine.  And it is secure, since the credentials (username/password) can be stored safely inside Node-RED and used by the http-request node.
 
-However it works only for ***finite*** http responses, i.e. responses with data of a fixed length (e.g. a single image).  But this solution cannot be used for responses with infinte length (e.g. an mjpeg stream) because:
+However it works only for ***finite*** http responses, i.e. responses with data of a fixed length (e.g. a single image).  But this solution cannot be used for responses with infinite length (e.g. an mjpeg stream) because:
 + The *http-request* node waits for the entire response to arrive, and then it sends a single output message (containing the entire response).
 + The *http-out* node will get the message, and will write the data into the http response node and close the http connection.
 
 I first tried to add (infinite) streaming functionality to the http-request and http-out nodes.  But meanwhile it became clear that creating a dedicated *http-proxy* node was a much better solution ...
 
 ### The http-proxy solution
-Since the standard Node-RED setup (see previous paragraph) isn't able to deal with ***infinite*** http responses, I decided to develop this node.  It can be used as a safe way to get infinite response (e.g. mjpeg stream from an IP camera):
+Since the standard Node-RED setup isn't able to deal with ***infinite*** http responses (see previous paragraph), I decided to develop this node.  It can be used as a safe way to get infinite response (e.g. mjpeg stream from an IP camera):
    
    ![safe](https://user-images.githubusercontent.com/14224149/61587882-c0384980-ab92-11e9-9b52-92446e92dc60.png)  
    
@@ -83,24 +85,24 @@ Since the standard Node-RED setup (see previous paragraph) isn't able to deal wi
    ```
    <img src="https://<node-red hostname>:1880/<some path>">
    ```
-2. Via a http-in node, this request will be send to the http-proxy node.
-3. The http-proxy node will add your credentials (which are stored securely in Node-RED) and forward your request to your IP camera.
-4. The 'img' element will get the camera image and display it.
+2. Via a http-in node, this request will be captured and send to the http-proxy node.
+3. The http-proxy node will add your credentials (which are stored securely in Node-RED) and ***forward/redirect*** your request to your IP camera.
+4. The client will get the camera image and display it (e.g. via the ```<img>``` element).
    
 ## Node Usage
-The following example flow explains how this node works closely together with Node-RED's httpin node.  Instead of navigating directly to some public url (in this case an mjpeg camera stream from https://webcam1.lpl.org/axis-cgi/mjpg/video.cgi), we will navigate to our Node-RED flow and Node-RED will forward the request to that target:
+The following example flow explains how this node works closely together with Node-RED's httpin node.  Instead of navigating directly to some public url (in this case an mjpeg camera stream from *https://webcam1.lpl.org/axis-cgi/mjpg/video.cgi*), we will navigate to our Node-RED flow and Node-RED will forward the request to that target:
 
    ![Stream example](https://user-images.githubusercontent.com/14224149/60925124-19ef6880-a2a3-11e9-8fdd-fede83adc291.png)
    
    ```
    [{"id":"cf75b05d.199df","type":"http in","z":"8bb35f74.82618","name":"","url":"/mjpeg_test","method":"get","upload":false,"swaggerDoc":"","x":600,"y":480,"wires":[["fc540b94.6dd968"]]},{"id":"fc540b94.6dd968","type":"http-proxy","z":"8bb35f74.82618","name":"","url":"https://webcam1.lpl.org/axis-cgi/mjpg/video.cgi","events":[],"headers":{},"proxy":"","restart":false,"timeout":1,"x":820,"y":480,"wires":[]}]
    ```
+This is what happens:
+1. Capture all requests for *http(s)://<node-red-hostname>:1880/mjpeg_test* via the *http-in* node.
+1. Forward all requests from the httpin node to the target host (*https://webcam1.lpl.org/axis-cgi/mjpg/video.cgi*).
+1. The response from the target host will be passed back to your dashboard.
 
-1. Forward all requests for http(s)://<node-red-hostname>:1880/mjpeg_test to your http-proxy node, via the httpin node.
-1. Forward all requests from the httpin node to the target host (https://webcam1.lpl.org/axis-cgi/mjpg/video.cgi).
-1. The response from the target host will be passed back to your browser.
-
-This way, it looks like Node-RED is providing your mjpeg camera stream...
+This way, it ***looks like*** Node-RED is providing your mjpeg camera stream...
 
 ![http_proxy](https://user-images.githubusercontent.com/14224149/60925580-64bdb000-a2a4-11e9-82e4-8267a7f2e061.gif)
 
@@ -278,7 +280,7 @@ Remarks:
 ## In depth explanation
 This section explains in more detail how Node-RED handles the http requests and corresponding http responses.
 
-## The standard Node-RED solution in detail
+### The standard Node-RED solution in detail
 
 ![Standard nodes](https://user-images.githubusercontent.com/14224149/61157366-3fc07b80-a4f6-11e9-8bf8-141720d4849b.png)
 
@@ -295,9 +297,9 @@ This section explains in more detail how Node-RED handles the http requests and 
    + Fill response headers with ```msg.headers```.
    + Fill response cookies with ```msg.cookies```.
 
-   At the end the browser will receive the response ...
+At the end the browser will receive the response ...
 
-## The http-proxy contribution solution in detail
+### The http-proxy contribution solution in detail
 
 ![Proxy in Node-RED](https://user-images.githubusercontent.com/14224149/61160537-07259f80-a500-11e9-9567-2fa0e6d17894.png)
 
