@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "A Node-Red node to use Node-RED as a http proxy server, for redirecting http(s) requests",
     "dependencies": {
-        "http-proxy": "1.17.0"
+        "http-proxy": "1.18.1"
     },
     "author": {
         "name": "Bart Butenaers"
