@@ -24,7 +24,7 @@ module.exports = function(RED) {
         res.writeHead(500, {
             'Content-Type': 'text/plain'
         });
-        res.end(err);        
+        res.end(String(err));        
     }
     
     function HttpProxyNode(config) {
